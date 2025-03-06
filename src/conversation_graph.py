@@ -22,7 +22,11 @@ def extract_personal_info(state: ConversationState, rag_processor) -> Dict[str, 
     
     # Use a structured extraction prompt
     extraction_prompt = f"""
-    Extract any personal information from this message. If none is present, return "None".
+    Extract ONLY IMPORTANT personal information from message. 
+    If none is present or it's trivial, return "None".
+    
+    Important information includes: names, professions, relationships, preferences.
+    Trivial information to ignore: greetings, small talk.
     
     Message: "{question}"
     
@@ -130,9 +134,11 @@ Context from documents:
 Question: {question}
 
 Please answer the question using both the retrieved context AND conversation history. 
-Remember personal information like names when shared.
+Remember personal information like names when shared, but don't explicitly mention how you know this information.
 Keep your tone warm and conversational, not academic or formal.
 If you don't have enough information, say so in a friendly way.
+Never use hashtags in your responses.
+Never mention "previous chat" or "as you mentioned earlier" in your responses. Also you don't have to always start with Hey "name".
 
 Answer:"""
         
@@ -211,6 +217,21 @@ Answer:"""
     
     return graph
 
+def prune_messages(messages: List[Union[HumanMessage, AIMessage]], max_messages: int = 10) -> List[Union[HumanMessage, AIMessage]]:
+    """Prune messages to keep state size manageable."""
+    if len(messages) <= max_messages:
+        return messages
+        
+    # Always keep the first system message if present
+    first_message = []
+    if messages and messages[0].type == "system":
+        first_message = [messages[0]]
+        messages = messages[1:]
+        
+    # Keep the most recent messages
+    return first_message + messages[-max_messages:]
+
+
 class ConversationAgent:
     def __init__(self, rag_processor):
         self.rag_processor = rag_processor
@@ -228,6 +249,12 @@ class ConversationAgent:
         self.conversation_state["messages"].append(HumanMessage(content=message))
         self.conversation_state["current_question"] = message
         self.conversation_state["completed"] = False
+        
+        # Prune messages if they get too long
+        self.conversation_state["messages"] = prune_messages(
+            self.conversation_state["messages"],
+            max_messages=10  # Adjust based on your needs
+        )
         
         # Pass the accumulated state to the graph
         result = self.graph.invoke(self.conversation_state)
