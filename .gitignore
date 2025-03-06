@@ -1,2 +1,4 @@
 personal_knowledge_assistant_plan.md
 .env
+data/
+__pycache__/
