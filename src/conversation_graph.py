@@ -158,9 +158,40 @@ Answer:"""
         }
     
     def should_end(state: ConversationState) -> str:
-        """Determine if we should continue or end."""
+        """Determine if we should continue or end with more sophisticated logic."""
+        # Existing logic - explicit completion flag
         if state.get("completed", False):
             return "end"
+        
+        # Add context-based ending conditions
+        messages = state.get("messages", [])
+        if messages:
+            last_message = messages[-1]
+            
+            # 1. Check for conversation ending phrases
+            if isinstance(last_message, AIMessage) and any(phrase in last_message.content.lower() 
+                for phrase in ["goodbye", "farewell", "have a nice day", "have a great day"]):
+                return "end"
+            
+            # 2. Check for request completion indicators
+            if isinstance(last_message, AIMessage) and any(phrase in last_message.content.lower()
+                for phrase in ["is there anything else", "can i help you with anything else", 
+                            "do you have any other questions"]):
+                # This is a good stopping point, though we allow continuation
+                pass
+            
+            # 3. Check for long conversation - might need restarting for performance
+            if len(messages) > 20:  # Consider restarting after very long conversations
+                # Optional: could end based on length, but we'll continue
+                pass
+        
+        # Check question complexity indicators
+        current_question = state.get("current_question", "")
+        if current_question and len(current_question) > 200:
+            # Long questions might need special handling
+            pass
+        
+        # Default: continue processing
         return "continue"
     
     # Create the graph
