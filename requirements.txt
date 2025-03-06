@@ -1,0 +1,17 @@
+langchain>=0.0.267
+langchain-core>=0.0.10
+langchain-openai>=0.0.2
+langchain-community>=0.0.8
+langchain-experimental>=0.0.8
+langchain_text_splitters>=0.0.1
+chromadb>=0.4.13
+langsmith>=0.0.43
+langserve>=0.0.27
+langchain-cli>=0.0.15
+python-dotenv>=1.0.0
+faiss-cpu>=1.7.4
+tiktoken>=0.5.1
+unstructured>=0.10.2
+pdf2image>=1.16.3
+pytesseract>=0.3.10
+docx2txt>=0.8
