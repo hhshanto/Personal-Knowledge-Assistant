@@ -1,4 +1,84 @@
-personal_knowledge_assistant_plan.md
+# Environment variables
 .env
-data/
+.env.*
+!.env.example
+
+# Virtual Environments
+venv/
+env/
+ENV/
+.venv/
+.conda/
+anaconda/
+
+# Vector stores & embeddings
+vector_store/
+embeddings/
+*.index
+*.bin
+*.pkl
+*.db
+*.sqlite
+**/chroma/
+
+# Python artifacts
 __pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+.pytest_cache/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# IDE specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Logs
+*.log
+logs/
+log/
+
+# User-specific files
+*.history
+*.pickle
+
+# Large files and data
+data/large_files/
+*.zip
+*.tar.gz
+*.rar
+
+# Model files
+models/
+*.onnx
+*.pt
+*.h5
+
+# Cache directories
+.cache/
+__pycache__/
+
+data/

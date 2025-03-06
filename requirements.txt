@@ -1,17 +1,38 @@
-langchain>=0.0.267
-langchain-core>=0.0.10
+# Core Libraries
+langchain>=0.1.0
+langchain-core>=0.1.0
 langchain-openai>=0.0.2
-langchain-community>=0.0.8
-langchain-experimental>=0.0.8
-langchain_text_splitters>=0.0.1
-chromadb>=0.4.13
-langsmith>=0.0.43
-langserve>=0.0.27
-langchain-cli>=0.0.15
-python-dotenv>=1.0.0
-faiss-cpu>=1.7.4
-tiktoken>=0.5.1
-unstructured>=0.10.2
+langchain-community>=0.0.10
+langgraph>=0.0.15
+langchain-chroma>=0.0.1
+
+# Vector Store
+chromadb>=0.4.18
+
+# LLM APIs
+openai>=1.6.0
+azure-identity>=1.15.0
+azure-core>=1.29.5
+
+# Document Processing
+unstructured>=0.10.30
 pdf2image>=1.16.3
 pytesseract>=0.3.10
+pypdf>=3.17.1
 docx2txt>=0.8
+pillow>=10.1.0
+python-pptx>=0.6.21
+markdown>=3.5.1
+
+# Utilities
+python-dotenv>=1.0.0
+numpy>=1.24.3
+tqdm>=4.66.1
+tiktoken>=0.5.1
+pydantic>=2.4.2
+requests>=2.31.0
+regex>=2023.10.3
+
+# Optional - Development
+pytest>=7.4.3
+jupyter>=1.0.0
