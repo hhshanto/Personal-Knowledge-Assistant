@@ -15,6 +15,47 @@ class ConversationState(TypedDict):
     completed: bool  # Add a flag to track completion
     memory: Dict[str, Any]  # Add explicit memory for important facts
 
+def extract_personal_info(state: ConversationState, rag_processor) -> Dict[str, Any]:
+    """Extract personal information using LLM instead of regex."""
+    question = state["current_question"]
+    memory = state.get("memory", {})
+    
+    # Use a structured extraction prompt
+    extraction_prompt = f"""
+    Extract any personal information from this message. If none is present, return "None".
+    
+    Message: "{question}"
+    
+    Please respond in this JSON format only:
+    {{
+        "name": "extracted name or null if no name mentioned",
+        "other_info": "any other personal info or null"
+    }}
+    """
+    
+    try:
+        # Get structured output from LLM
+        response = rag_processor.llm.invoke(extraction_prompt)
+        
+        # Use regex just to extract the JSON portion (not for name extraction)
+        import json
+        import re
+        json_match = re.search(r'\{.*\}', response.content, re.DOTALL)
+        
+        if json_match:
+            extracted_info = json.loads(json_match.group(0))
+            
+            # Update memory with extracted information
+            if extracted_info.get("name") and extracted_info["name"] != "null":
+                memory["name"] = extracted_info["name"]
+                
+            if extracted_info.get("other_info") and extracted_info["other_info"] != "null":
+                memory["other_info"] = extracted_info["other_info"]
+        
+    except Exception as e:
+        print(f"Error in information extraction: {str(e)}")
+    
+    return memory
 def create_conversation_graph(rag_processor: RAGProcessor):
     """Create a conversation graph using LangGraph."""
     
@@ -32,7 +73,7 @@ def create_conversation_graph(rag_processor: RAGProcessor):
         memory = state.get("memory", {})
         
         # Check if this is a personal information question
-        personal_info_pattern = re.compile(r"(what( is|'s)? my name|who am i)", re.IGNORECASE)
+        personal_info_pattern = re.compile(r"(what'?s? my name|who am i)", re.IGNORECASE)
         if personal_info_pattern.search(question) and "name" in memory:
             # If asking about stored personal info, no need to retrieve from documents
             return {
@@ -66,13 +107,7 @@ def create_conversation_graph(rag_processor: RAGProcessor):
             
         question = state["current_question"]
         context = state["context"]
-        memory = state.get("memory", {})
-        
-        # Extract and store personal information (like name)
-        name_pattern = re.compile(r"my name is (\w+)", re.IGNORECASE)
-        name_match = name_pattern.search(question)
-        if name_match:
-            memory["name"] = name_match.group(1)
+        memory = extract_personal_info(state, rag_processor)
         
         # Include memory context if available
         memory_context = ""
