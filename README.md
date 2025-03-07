@@ -13,6 +13,9 @@ Personal Knowledge Assistant lets you create a personalized AI assistant that an
 - **Fallback strategies**: Multiple retrieval approaches to maximize answer quality
 - **LangGraph architecture**: Modular conversation flow with clear state management
 - **Warm, conversational tone**: Responds in a friendly manner even with technical content
+- **Streamlit Interface**: User-friendly web interface for interaction
+- **Document Upload**: Upload new documents directly through the interface
+- **Dynamic Vector Store Update**: Add new documents to the vector store without restarting the application
 
 ## 🔧 Technologies
 
@@ -20,6 +23,7 @@ Personal Knowledge Assistant lets you create a personalized AI assistant that an
 - **LangGraph**: For conversational state management
 - **ChromaDB**: For vector storage
 - **Azure OpenAI**: For embeddings and response generation
+- **Streamlit**: For building the web interface
 
 ## 🚀 Installation
 
@@ -85,6 +89,14 @@ Type 'exit', 'quit', or 'q' to end the session.
 Your question: tell me about regex
 ```
 
+4. **Use the Streamlit Interface**
+
+Run the Streamlit application to interact with the assistant through a web interface:
+
+```bash
+streamlit run app.py
+```
+
 ## 🗂️ Project Structure
 
 ```
@@ -99,6 +111,7 @@ Personal-Knowledge-Assistant/
 │   └── retriever.py          # Knowledge retrieval from vector store
 ├── vector_store/             # Generated vector embeddings
 ├── main.py                   # Main application entry point
+├── app.py                    # Streamlit application entry point
 ├── .env                      # Environment variables (create this)
 └── requirements.txt          # Project dependencies
 ```
