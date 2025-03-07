@@ -98,7 +98,7 @@ class LLMLoader:
             model = "gpt-35-turbo" if self.use_azure else "gpt-3.5-turbo"
             
         if self.use_azure:
-            deployment_name = model  # In Azure, this is your deployment name
+            deployment_name = model  
             return AzureChatOpenAI(
                 openai_api_key=os.getenv("AZURE_OPENAI_API_KEY"),
                 openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
@@ -114,7 +114,6 @@ class LLMLoader:
                 **kwargs
             )
 
-# Example usage
 if __name__ == "__main__":
     # Test with Azure OpenAI
     try:
