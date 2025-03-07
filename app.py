@@ -1,11 +1,13 @@
 import sqlite_patch
-# app.py
 import streamlit as st
 from dotenv import load_dotenv
 from src.rag_processor import RAGProcessor
 from src.conversation_graph import ConversationAgent
 import os
 import time
+import tempfile
+from src.document_loader import load_documents_from_files
+from src.embeddings import chunk_documents, add_documents_to_vector_store
 
 st.set_page_config(
     page_title="Personal Knowledge Assistant",
@@ -14,8 +16,6 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS for better styling
-# Custom CSS for better styling with improved contrast
 st.markdown("""
 <style>
     /* Main app background */
@@ -38,17 +38,17 @@ st.markdown("""
         align-items: flex-start;
     }
     
-    /* User message - blue theme */
+    /* User message - blue theme - slightly adjusted */
     .chat-message.user {
-        background-color: #e3f2fd; /* Light blue background */
-        border-left: 5px solid #1976d2;
+        background-color: #d4e6ff; /* Slightly deeper blue */
+        border-left: 5px solid #1565c0;
     }
-    
-    /* Assistant message - green theme */
+
+    /* Assistant message - green theme - slightly adjusted */
     .chat-message.assistant {
-        background-color: #e8f5e9; /* Light green background */
-        border-left: 5px solid #4caf50;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+        background-color: #e0f2e9; /* Slightly deeper green */
+        border-left: 5px solid #2e7d32;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
     
     /* Avatar styling */
@@ -97,9 +97,11 @@ st.markdown("""
         color: #1e3799;
     }
     
-    /* Sidebar padding */
-    .sidebar-content {
-        padding: 1rem;
+    /* Sidebar adjustments */
+    [data-testid="stSidebar"] {
+        padding-left: 0 !important;
+        margin-left: 0 !important;
+        width: 250px; /* Adjust the width as needed */
     }
 </style>
 """, unsafe_allow_html=True)
@@ -129,22 +131,23 @@ def get_conversation_agent():
         rag_processor = RAGProcessor(vs_path, use_azure=use_azure)
         return ConversationAgent(rag_processor)
 
-# Sidebar with app information
+# Sidebar with app information and document upload
 with st.sidebar:
     st.image("https://img.icons8.com/color/96/000000/brain--v2.png", width=80)
-    st.title("About")
-    st.markdown("""
-    ### Personal Knowledge Assistant
+    st.title("Personal Knowledge Assistant")
     
-    This assistant helps you access and interact with your personal knowledge base.
-    
-    **Features:**
-    - Answer questions about your documents
-    - Remember personal information
-    - Natural conversational interface
-    
-    Built with LangChain and LangGraph
-    """)
+    # About section
+    with st.expander("About", expanded=True):
+        st.markdown("""
+        This assistant helps you access and interact with your personal knowledge base.
+        
+        **Features:**
+        - Answer questions about your documents
+        - Remember personal information
+        - Natural conversational interface
+        
+        Built with LangChain and LangGraph
+        """)
     
     # Add a clear conversation button
     if st.button("Clear Conversation", type="primary"):
@@ -152,10 +155,96 @@ with st.sidebar:
         st.session_state.thinking = False
         st.rerun()
     
+    # Add a divider for visual separation
+    st.divider()
+    
+    # Document upload section
+    st.markdown("### 📄 Upload Documents")
+    
+    uploaded_files = st.file_uploader(
+        "Add files to your knowledge base", 
+        type=["pdf", "txt", "docx", "md"],
+        accept_multiple_files=True
+    )
+    
+    if uploaded_files:
+        file_details = ""
+        for file in uploaded_files:
+            file_size_mb = round(file.size / (1024 * 1024), 2)
+            file_details += f"- {file.name} ({file_size_mb} MB)\n"
+        
+        st.markdown(f"**Selected files:**\n{file_details}")
+        
+        col1, col2 = st.columns(2)
+        with col1:
+            process_button = st.button("Process Documents", type="primary", key="process_docs")
+        with col2:
+            cancel_button = st.button("Cancel", key="cancel_upload")
+            
+        if cancel_button:
+            st.session_state.uploaded_files = None
+            st.rerun()
+            
+        if process_button:
+            with st.spinner("Processing documents..."):
+                # Create temporary files
+                temp_files = []
+                for uploaded_file in uploaded_files:
+                    # Create a temporary file
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=f".{uploaded_file.name.split('.')[-1]}") as tmp_file:
+                        # Write the uploaded file content to the temp file
+                        tmp_file.write(uploaded_file.getvalue())
+                        temp_files.append(tmp_file.name)
+                
+                try:
+                    # Load documents
+                    documents = load_documents_from_files(temp_files)
+                    
+                    if documents:
+                        # Get document count
+                        doc_count = len(documents)
+                        
+                        # Chunk documents
+                        chunks = chunk_documents(documents)
+                        chunk_count = len(chunks)
+                        
+                        # Add to vector store
+                        add_documents_to_vector_store(
+                            chunks, 
+                            vs_path, 
+                            use_azure=use_azure
+                        )
+                        
+                        st.success(f"✅ Successfully processed {doc_count} documents into {chunk_count} chunks!")
+                        
+                        # Add a refresh button
+                        if st.button("Refresh Knowledge Base"):
+                            # Clear the cached agent to force reloading with new documents
+                            st.cache_resource.clear()
+                            st.rerun()
+                    else:
+                        st.error("No documents were successfully loaded. Please check file formats.")
+                
+                except Exception as e:
+                    st.error(f"Error processing documents: {str(e)}")
+                
+                finally:
+                    # Clean up temporary files
+                    import os
+                    for temp_file in temp_files:
+                        try:
+                            os.unlink(temp_file)
+                        except:
+                            pass
+    
+    # Add another divider before settings
+    st.divider()
+    
     # Optional settings expandable section
     with st.expander("Settings"):
         st.slider("Response Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
         st.checkbox("Show sources", value=True)
+    
 
 # Main content area
 st.header("🧠 Personal Knowledge Assistant")
@@ -170,13 +259,14 @@ if "messages" not in st.session_state:
 if "thinking" not in st.session_state:
     st.session_state.thinking = False
 
-# Function to display custom chat bubbles
 def display_message(role, content):
-    avatar = "👤" if role == "user" else "🧠"
+    # Use better emoji icons
+    avatar = "👨‍💼" if role == "user" else "🤖"
+    
     st.markdown(f"""
     <div class="chat-message {role}">
         <div class="avatar">{avatar}</div>
-        <div class="content"><strong>{'You' if role == 'user' else 'Assistant'}:</strong><br>{content}</div>
+        <div class="content">{content}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -187,36 +277,52 @@ if not st.session_state.messages:
 for message in st.session_state.messages:
     display_message(message["role"], message["content"])
 
-# Replace your input area section with this:
+# Replace your input area section with this fixed version:
 input_container = st.container()
 
-# Accept user input
-with input_container:
-    col1, col2 = st.columns([6, 1])
-    with col1:
-        # Create a unique key for the input that changes when needed
-        input_key = f"input_{len(st.session_state.messages)}"
-        user_input = st.text_input("Type your question here...", key=input_key, label_visibility="collapsed")
-    with col2:
-        submit_button = st.button("Send", type="primary")
+# Store the form key in session state to ensure consistency
+if "form_key" not in st.session_state:
+    st.session_state.form_key = "chat_form_1"
 
-# Check for Enter key press (by checking if input has content)
-submitted = submit_button or (user_input and not st.session_state.thinking)
+# Use a flag to control form showing
+if "processing" not in st.session_state:
+    st.session_state.processing = False
 
-# Process user input
-if submitted and user_input:
-    if not st.session_state.thinking:
-        # Add user message to chat history
-        st.session_state.messages.append({"role": "user", "content": user_input})
-        st.session_state.thinking = True
-        st.rerun()
-    else:
-        # Display thinking animation
-        with st.spinner("Thinking..."):
-            # Use conversation agent
-            response = agent.process_message(user_input)
+# Handle form display and submission
+if not st.session_state.processing:
+    with st.form(key=st.session_state.form_key, clear_on_submit=True):
+        user_input = st.text_input("Type your question here...", key="user_input", label_visibility="collapsed")
+        submit_button = st.form_submit_button("Send", type="primary")
+        
+        if submit_button and user_input:
+            # Set flag to prevent duplicate forms during processing
+            st.session_state.processing = True
             
-        # Add assistant response to chat history
-        st.session_state.messages.append({"role": "assistant", "content": response})
-        st.session_state.thinking = False
-        st.rerun()
+            # Add user message to chat history
+            st.session_state.messages.append({"role": "user", "content": user_input})
+            
+            # Store the question to process after rerun
+            st.session_state.current_question = user_input
+            
+            # Rerun once to update the UI with user message
+            st.rerun()
+else:
+    # Process the question and show thinking animation
+    with st.spinner("Thinking..."):
+        try:
+            response = agent.process_message(st.session_state.current_question)
+            # Add assistant response to chat history
+            st.session_state.messages.append({"role": "assistant", "content": response})
+        except Exception as e:
+            st.error(f"Error: {str(e)}")
+            st.session_state.messages.append({
+                "role": "assistant", 
+                "content": "I encountered an error processing your request. Please try again."
+            })
+    
+    # Reset processing state and update form key for next input
+    st.session_state.processing = False
+    st.session_state.form_key = f"chat_form_{len(st.session_state.messages)}"
+    
+    # Rerun to show the form again
+    st.rerun()

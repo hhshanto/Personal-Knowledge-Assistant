@@ -61,6 +61,8 @@ MANIFEST
 logs/
 log/
 
+*.streamlit/
+
 # User-specific files
 *.history
 *.pickle

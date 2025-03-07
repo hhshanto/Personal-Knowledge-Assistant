@@ -24,6 +24,40 @@ def load_document(file_path: str) -> List[Document]:
     else:
         raise ValueError(f"Unsupported file type: {file_path}")
         
+def load_documents_from_files(file_paths):
+    """Load documents from a list of file paths."""
+    documents = []
+    
+    for file_path in file_paths:
+        try:
+            # Determine the file type based on extension
+            if file_path.lower().endswith('.pdf'):
+                from langchain_community.document_loaders import PyPDFLoader
+                loader = PyPDFLoader(file_path)
+                documents.extend(loader.load())
+                
+            elif file_path.lower().endswith('.docx'):
+                from langchain_community.document_loaders import Docx2txtLoader
+                loader = Docx2txtLoader(file_path)
+                documents.extend(loader.load())
+                
+            elif file_path.lower().endswith('.txt'):
+                from langchain_community.document_loaders import TextLoader
+                loader = TextLoader(file_path)
+                documents.extend(loader.load())
+                
+            elif file_path.lower().endswith('.md'):
+                from langchain_community.document_loaders import TextLoader
+                loader = TextLoader(file_path)
+                documents.extend(loader.load())
+                
+            else:
+                print(f"Unsupported file format: {file_path}")
+                
+        except Exception as e:
+            print(f"Error loading file {file_path}: {str(e)}")
+    
+    return documents
 def load_documents_from_directory(directory_path: str) -> List[Document]:
     """Load all supported documents from a directory."""
     if not os.path.isdir(directory_path):

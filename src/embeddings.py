@@ -53,6 +53,34 @@ def create_vector_store(chunks: List[Document], use_azure: bool = True, persist_
         )
         
     return vector_store
+def get_embedding_function(use_azure: bool = True):
+    """Get the appropriate embedding function based on configuration."""
+    if use_azure:
+        return AzureOpenAIEmbeddings(
+            azure_deployment="text-embedding-ada-002",
+            openai_api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+            openai_api_key=os.getenv("AZURE_OPENAI_API_KEY")
+        )
+    else:
+        return OpenAIEmbeddings()
+
+# Then update the add_documents_to_vector_store function:
+def add_documents_to_vector_store(documents, vector_store_path, use_azure=True):
+    """Add new documents to an existing vector store."""
+    
+    # Load the existing vector store
+    vector_store = load_vector_store(vector_store_path, use_azure)
+    
+    if vector_store is None:
+        # Create a new one if it doesn't exist
+        vector_store = create_vector_store(documents, vector_store_path, use_azure)
+    else:
+        # Add documents to the existing store
+        embedding_function = get_embedding_function(use_azure)
+        vector_store.add_documents(documents)
+    
+    return vector_store
 
 def save_vector_store(vector_store: Chroma, path: str = None) -> None:
     """
