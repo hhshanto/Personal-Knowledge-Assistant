@@ -7,7 +7,6 @@ from src.conversation_graph import ConversationAgent
 import os
 import time
 
-# Page configuration
 st.set_page_config(
     page_title="Personal Knowledge Assistant",
     page_icon="🧠",
@@ -107,8 +106,19 @@ st.markdown("""
 
 
 
-# Load environment variables
+# Load environment variables from both .env and Streamlit secrets
 load_dotenv()
+
+# Set Azure OpenAI credentials from Streamlit secrets
+if 'AZURE_OPENAI_API_KEY' in st.secrets:
+    os.environ['AZURE_OPENAI_API_KEY'] = st.secrets['AZURE_OPENAI_API_KEY']
+if 'AZURE_OPENAI_ENDPOINT' in st.secrets:
+    os.environ['AZURE_OPENAI_ENDPOINT'] = st.secrets['AZURE_OPENAI_ENDPOINT']
+if 'AZURE_DEPLOYMENT_NAME' in st.secrets:
+    os.environ['AZURE_DEPLOYMENT_NAME'] = st.secrets['AZURE_DEPLOYMENT_NAME']
+if 'AZURE_EMBEDDINGS_DEPLOYMENT_NAME' in st.secrets:
+    os.environ['AZURE_EMBEDDINGS_DEPLOYMENT_NAME'] = st.secrets['AZURE_EMBEDDINGS_DEPLOYMENT_NAME']
+
 vs_path = os.path.join(os.path.dirname(__file__), "vector_store", "index")
 use_azure = os.getenv("USE_AZURE", "true").lower() == "true"
 

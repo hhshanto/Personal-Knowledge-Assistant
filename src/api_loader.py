@@ -1,6 +1,7 @@
 from openai import OpenAI, AzureOpenAI
 from langchain_openai import ChatOpenAI, AzureChatOpenAI
 from dotenv import load_dotenv
+import streamlit as st
 import os
 from typing import Optional, Union, Dict, Any
 
@@ -31,7 +32,7 @@ class LLMLoader:
                     raise ValueError(f"Environment variable {var} is required for Azure OpenAI")
                     
             return AzureOpenAI(
-                api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+                api_key=st.secrets["AZURE_OPENAI_API_KEY"],
                 api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
                 azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT")
             )
