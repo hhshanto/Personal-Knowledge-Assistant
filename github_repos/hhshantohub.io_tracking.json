@@ -1,0 +1,24 @@
+{
+  "repo_url": "https://github.com/hhshanto/hhshanto.github.io",
+  "last_commit": "bc26df6b6fa149d1b79dd070ef2b94e213fb254e",
+  "last_sync": "2025-03-15T14:26:36.247469",
+  "files": {
+    "about.md": "41daccb980b0af20096016230c4d5e6e",
+    "all-posts.md": "898a7a7a77cc15639970f048c60f0658",
+    "create-post.md": "6cf859584e8b5728fd51af1023bfd617",
+    "README.md": "f0f5516748207c668f1cd063c9b1edb8",
+    "arts-literature\\index.md": "366c476bd1ef5513af7d8f3107fba400",
+    "contemporary\\index.md": "cdf90ee582fb1ed969c3cddf1bcc1f95",
+    "natural-sciences\\index.md": "188fa486aa24afbeeccb627382734127",
+    "reflections\\index.md": "efc477396c3f000cce43168079208bbf",
+    "social-sciences\\index.md": "d21b6761e07456b4fd3f1bc9b55ce8b0",
+    "_natural-sciences\\physics\\2025-03-08-higgs-boson-discovery-implications.md": "79ec2d2640fd102a70d05af6bf5d3bbf",
+    "_natural-sciences\\physics\\2025-03-08-large-hadron-collider-engineering-physics.md": "5456c8b8b05c6d239635dc7ed1ff6112",
+    "_reflections\\about\\2025-03-08-noema-digital-garden.md": "3f3a13918c4b57155c1ed5b63d740739",
+    "_reflections\\philosophy\\2025-01-26-artificial-intelligence-ethics.md": "22c8965e29d127c206b70efab39d08b8",
+    "_reflections\\philosophy\\stoicism.md": "8cb4b6f4f60c80649e58c382c7c41b26",
+    "_reflections\\_templates\\reflection-template.md": "fd98b12c1e31a9dc1d727dcafa5da6b2",
+    "_social-sciences\\political-science\\2025-03-15-cognitive-dissonance.md": "57bb65286e8d5b2b757ace19dbb2d8bb",
+    "_social-sciences\\political-science\\2025-03-15-patriotic-ambivalence.md": "643d4b3490055bd945c797f4b70c2c1b"
+  }
+}

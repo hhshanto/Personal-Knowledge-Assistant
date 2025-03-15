@@ -53,12 +53,6 @@ def github_connector_ui():
             json.dump(config, f, indent=2)
         st.success("Configuration saved!")
     
-    # Initialize session state for file visibility
-    if "github_processed_files" not in st.session_state:
-        st.session_state.github_processed_files = []
-    if "github_sync_expanded" not in st.session_state:
-        st.session_state.github_sync_expanded = False
-    
     # Sync button
     if st.button("Sync GitHub Knowledge Base"):
         if not repo_url:
@@ -92,21 +86,30 @@ def github_connector_ui():
                     st.error(f"Error syncing repository: {str(e)}")
     
     # Display processed files from the last sync
-    if st.session_state.github_processed_files:
-        with st.expander("Show processed files", expanded=st.session_state.github_sync_expanded):
-            st.markdown("### Files added to vector storage")
-            for i, file_info in enumerate(st.session_state.github_processed_files):
-                filename = os.path.basename(file_info["path"])
-                relative_path = file_info["relative_path"]
-                status = file_info["status"]
-                
-                # Format the display with color based on status
-                if status == "new":
-                    st.markdown(f"🆕 **{filename}** - {relative_path}")
-                elif status == "updated":
-                    st.markdown(f"🔄 **{filename}** - {relative_path}")
-                else:
-                    st.markdown(f"📄 **{filename}** - {relative_path}")
+    # Instead of using an expander, use a markdown toggle section
+    if "github_processed_files" in st.session_state and st.session_state.github_processed_files:
+        st.markdown("### Files added to vector storage")
+        
+        # Add a show/hide button using checkbox
+        show_files = st.checkbox("Show file details", 
+                                value=st.session_state.get("github_sync_expanded", False))
+        
+        if show_files:
+            # Create a container for the files
+            file_container = st.container()
+            with file_container:
+                for i, file_info in enumerate(st.session_state.github_processed_files):
+                    filename = os.path.basename(file_info["path"])
+                    relative_path = file_info["relative_path"]
+                    status = file_info["status"]
+                    
+                    # Format the display with color based on status
+                    if status == "new":
+                        st.markdown(f"🆕 **{filename}** - {relative_path}")
+                    elif status == "updated":
+                        st.markdown(f"🔄 **{filename}** - {relative_path}")
+                    else:
+                        st.markdown(f"📄 **{filename}** - {relative_path}")
 
     # Display last sync info if available
     tracking_files = []
