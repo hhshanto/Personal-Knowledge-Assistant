@@ -1,3 +1,4 @@
+
 # Personal Knowledge Assistant
 
 A smart, conversational RAG (Retrieval Augmented Generation) system that answers questions based on your personal knowledge base.
@@ -16,6 +17,7 @@ Personal Knowledge Assistant lets you create a personalized AI assistant that an
 - **Streamlit Interface**: User-friendly web interface for interaction
 - **Document Upload**: Upload new documents directly through the interface
 - **Dynamic Vector Store Update**: Add new documents to the vector store without restarting the application
+- **GitHub Knowledge Integration**: Connect to any GitHub repository to import markdown files into your knowledge base
 
 ## 🔧 Technologies
 
@@ -24,6 +26,7 @@ Personal Knowledge Assistant lets you create a personalized AI assistant that an
 - **ChromaDB**: For vector storage
 - **Azure OpenAI**: For embeddings and response generation
 - **Streamlit**: For building the web interface
+- **GitPython**: For GitHub repository integration
 
 ## 🚀 Installation
 
@@ -68,7 +71,15 @@ DOCUMENTS_DIRECTORY=./data
 
 Place your documents in the data directory or configure an alternative location in the .env file.
 
-2. **Run the application**
+2. **Connect GitHub repositories**
+
+Use the GitHub Knowledge Base section in the sidebar to connect markdown files from your repositories:
+   - Enter your repository URL
+   - Choose the branch (default: main)
+   - Click "Sync GitHub Knowledge Base"
+   - The system will clone the repository and index all markdown files
+
+3. **Run the application**
 
 ```bash
 # For first-time setup or to rebuild the vector store
@@ -78,7 +89,7 @@ python main.py --rebuild
 python main.py
 ```
 
-3. **Ask questions**
+4. **Ask questions**
 
 Once the application is running, you can ask questions about the content in your documents.
 
@@ -89,7 +100,7 @@ Type 'exit', 'quit', or 'q' to end the session.
 Your question: tell me about regex
 ```
 
-4. **Use the Streamlit Interface**
+5. **Use the Streamlit Interface**
 
 Run the Streamlit application to interact with the assistant through a web interface:
 
@@ -102,13 +113,18 @@ streamlit run app.py
 ```
 Personal-Knowledge-Assistant/
 ├── data/                     # Your documents go here
+├── github_repos/             # Cloned GitHub repositories
 ├── src/
 │   ├── api_loader.py         # LLM API integration
 │   ├── conversation_graph.py # LangGraph conversation flow
 │   ├── document_loader.py    # Document processing
 │   ├── embeddings.py         # Vector embedding functionality
+│   ├── github_sync.py        # GitHub repository integration
+│   ├── knowledge_base.py     # Knowledge base management
 │   ├── rag_processor.py      # Core RAG implementation
-│   └── retriever.py          # Knowledge retrieval from vector store
+│   ├── retriever.py          # Knowledge retrieval from vector store
+│   └── components/           # UI components
+│       └── github_connector.py # GitHub connector UI
 ├── vector_store/             # Generated vector embeddings
 ├── main.py                   # Main application entry point
 ├── app.py                    # Streamlit application entry point
@@ -145,7 +161,3 @@ MIT License
 ## 👥 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
-
----
-
-Built with ❤️ using LangChain and LangGraph
