@@ -127,11 +127,17 @@ vs_path = os.path.join(os.path.dirname(__file__), "vector_store", "index")
 use_azure = os.getenv("USE_AZURE", "true").lower() == "true"
 
 # Initialize RAG processor and conversation agent
-@st.cache_resource
+@st.cache_resource(ttl=3600)  # Cache for 1 hour
 def get_conversation_agent():
     with st.spinner("Initializing knowledge assistant..."):
         rag_processor = RAGProcessor(vs_path, use_azure=use_azure)
         return ConversationAgent(rag_processor)
+
+# Add a function to explicitly clear the agent cache
+def reset_conversation_agent():
+    if "conversation_agent" in st.session_state:
+        del st.session_state["conversation_agent"]
+    st.cache_resource.clear()
 
 # Sidebar with app information and document upload
 with st.sidebar:
@@ -155,8 +161,22 @@ with st.sidebar:
     
     # Add a clear conversation button
     if st.button("Clear Conversation", type="primary"):
-        st.session_state.messages = []
-        st.session_state.thinking = False
+        if "messages" in st.session_state:
+            st.session_state.messages = []
+        
+        if "thinking" in st.session_state:
+            st.session_state.thinking = False
+        
+        # Get the conversation agent and reset its memory
+        try:
+            agent = get_conversation_agent()
+            agent.reset_memory()
+            # Clear the cache to ensure the agent is completely reset
+            st.cache_resource.clear()
+            st.success("Conversation history and memory cleared!")
+        except Exception as e:
+            st.error(f"Error clearing conversation memory: {str(e)}")
+        
         st.rerun()
     
     # Add a divider for visual separation
@@ -244,13 +264,31 @@ with st.sidebar:
     # Add another divider before settings
     st.divider()
     
-    # Optional settings expandable section
-    with st.expander("Settings"):
-        st.slider("Response Temperature", min_value=0.0, max_value=1.0, value=0.7, step=0.1)
-        st.checkbox("Show sources", value=True)
-    
+    # Add this divider and developer tools at the end of the sidebar
+    st.divider()
+    # Developer tools (collapsible)
+    with st.expander("Developer Tools", expanded=False):
+        st.write("Tools for debugging and maintenance")
+        
+        if st.button("Clear All Caches"):
+            st.cache_resource.clear()
+            st.cache_data.clear()
+            st.success("All caches cleared!")
+            
+        # Show memory state
+        if st.button("Show Agent State"):
+            try:
+                agent = get_conversation_agent()
+                memory_state = agent.conversation_state.get("memory", {})
+                st.write("Current memory state:")
+                st.json(memory_state)
+                
+                context = agent.conversation_state.get("context")
+                st.write(f"Context length: {len(context) if context else 0} characters")
+            except Exception as e:
+                st.error(f"Error getting agent state: {str(e)}")
 
-# Main content area
+# Main content area (this is where the sidebar ends and main content begins)
 st.header("🧠 Personal Knowledge Assistant")
 
 # Initialize agent

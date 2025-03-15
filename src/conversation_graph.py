@@ -274,6 +274,17 @@ class ConversationAgent:
             "completed": True,
             "memory": {}  # Initialize memory
         }
+
+    def reset_memory(self):
+        """Reset the conversation agent's memory and state."""
+        self.conversation_state = {
+            "messages": [],
+            "context": None,
+            "current_question": None,
+            "completed": True,
+            "memory": {}  # Reset memory
+        }
+        return "Memory and conversation context cleared successfully."
     
     def process_message(self, message):
         # Add the new message to existing conversation
