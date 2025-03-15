@@ -8,6 +8,8 @@ import time
 import tempfile
 from src.document_loader import load_documents_from_files
 from src.embeddings import chunk_documents, add_documents_to_vector_store
+from src.components.github_connector import github_connector_ui
+
 
 st.set_page_config(
     page_title="Personal Knowledge Assistant",
@@ -133,6 +135,8 @@ def get_conversation_agent():
 
 # Sidebar with app information and document upload
 with st.sidebar:
+    with st.expander("GitHub Knowledge Base"):
+        github_connector_ui()
     st.image("https://img.icons8.com/color/96/000000/brain--v2.png", width=80)
     st.title("Personal Knowledge Assistant")
     
