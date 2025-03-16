@@ -3,7 +3,7 @@ from langchain_openai import AzureOpenAIEmbeddings, OpenAIEmbeddings
 # Updated import for Chroma
 from langchain_chroma import Chroma
 from langchain_core.documents import Document
-from typing import List, Optional, Union
+from typing import List, Optional, Union, Dict, Any
 import os
 from src.api_loader import LLMLoader
 
@@ -69,18 +69,98 @@ def get_embedding_function(use_azure: bool = True):
 def add_documents_to_vector_store(documents, vector_store_path, use_azure=True):
     """Add new documents to an existing vector store."""
     
+    # Add source filename to metadata if not present
+    for doc in documents:
+        if not doc.metadata.get('source'):
+            doc.metadata['source'] = 'unknown'
+        
+        # Extract filename from source path if it exists
+        source = doc.metadata.get('source', '')
+        if isinstance(source, str) and os.path.exists(source):
+            doc.metadata['filename'] = os.path.basename(source)
+            doc.metadata['filetype'] = os.path.splitext(source)[1].lower()[1:]  # Remove the dot
+            
+            # Add creation and modified times
+            try:
+                doc.metadata['created_at'] = os.path.getctime(source)
+                doc.metadata['modified_at'] = os.path.getmtime(source)
+            except:
+                pass
+    
     # Load the existing vector store
     vector_store = load_vector_store(vector_store_path, use_azure)
     
     if vector_store is None:
         # Create a new one if it doesn't exist
-        vector_store = create_vector_store(documents, vector_store_path, use_azure)
+        vector_store = create_vector_store(documents, use_azure, vector_store_path)
     else:
         # Add documents to the existing store
         embedding_function = get_embedding_function(use_azure)
         vector_store.add_documents(documents)
     
     return vector_store
+
+def get_all_documents_metadata(path: str, use_azure: bool = True) -> List[dict]:
+    """Get metadata for all documents in the vector store."""
+    vector_store = load_vector_store(path, use_azure)
+    if not vector_store:
+        return []
+    
+    # Get all documents from ChromaDB
+    results = vector_store._collection.get()
+    
+    # Extract metadata and IDs
+    documents = []
+    for i, (doc_id, metadata, content) in enumerate(zip(
+        results['ids'], 
+        results['metadatas'], 
+        results['documents']
+    )):
+        # Add ID to metadata for reference
+        metadata['id'] = doc_id
+        metadata['content_preview'] = content[:100] + "..." if len(content) > 100 else content
+        documents.append(metadata)
+    
+    return documents
+
+def delete_documents_by_ids(path: str, doc_ids: List[str], use_azure: bool = True) -> bool:
+    """Delete specific documents from the vector store by their IDs."""
+    vector_store = load_vector_store(path, use_azure)
+    if not vector_store:
+        return False
+    
+    try:
+        # Delete documents by IDs
+        vector_store._collection.delete(doc_ids)
+        # No need to explicitly call persist in newer versions of langchain_chroma
+        # The deletion is automatically persisted
+        return True
+    except Exception as e:
+        print(f"Error deleting documents: {str(e)}")
+        return False
+
+def delete_documents_by_source(path: str, source_path: str, use_azure: bool = True) -> tuple:
+    """Delete all documents from a specific source file."""
+    vector_store = load_vector_store(path, use_azure)
+    if not vector_store:
+        return False, 0
+    
+    try:
+        # Query for documents with the matching source
+        results = vector_store._collection.get(
+            where={"source": source_path}
+        )
+        
+        if results and results['ids']:
+            # Delete documents by IDs
+            vector_store._collection.delete(results['ids'])
+            # No need to explicitly call persist in newer versions of langchain_chroma
+            # The deletion is automatically persisted
+            return True, len(results['ids'])
+        return False, 0
+    except Exception as e:
+        print(f"Error deleting documents by source: {str(e)}")
+        return False, 0
 
 def save_vector_store(vector_store: Chroma, path: str = None) -> None:
     """

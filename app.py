@@ -9,6 +9,7 @@ import tempfile
 from src.document_loader import load_documents_from_files
 from src.embeddings import chunk_documents, add_documents_to_vector_store
 from src.components.github_connector import github_connector_ui
+from src.components.vector_store_manager import vector_store_manager_ui
 
 
 st.set_page_config(
@@ -270,23 +271,31 @@ with st.sidebar:
     with st.expander("Developer Tools", expanded=False):
         st.write("Tools for debugging and maintenance")
         
-        if st.button("Clear All Caches"):
-            st.cache_resource.clear()
-            st.cache_data.clear()
-            st.success("All caches cleared!")
-            
-        # Show memory state
-        if st.button("Show Agent State"):
-            try:
-                agent = get_conversation_agent()
-                memory_state = agent.conversation_state.get("memory", {})
-                st.write("Current memory state:")
-                st.json(memory_state)
-                
-                context = agent.conversation_state.get("context")
-                st.write(f"Context length: {len(context) if context else 0} characters")
-            except Exception as e:
-                st.error(f"Error getting agent state: {str(e)}")
+        tool_tabs = st.tabs(["Cache", "Memory", "Vector Store"])
+        
+        with tool_tabs[0]:
+            if st.button("Clear All Caches"):
+                st.cache_resource.clear()
+                st.cache_data.clear()
+                st.success("All caches cleared!")
+        
+        with tool_tabs[1]:
+            # Show memory state
+            if st.button("Show Agent State"):
+                try:
+                    agent = get_conversation_agent()
+                    memory_state = agent.conversation_state.get("memory", {})
+                    st.write("Current memory state:")
+                    st.json(memory_state)
+                    
+                    context = agent.conversation_state.get("context")
+                    st.write(f"Context length: {len(context) if context else 0} characters")
+                except Exception as e:
+                    st.error(f"Error getting agent state: {str(e)}")
+        
+        with tool_tabs[2]:
+            # Add vector store manager
+            vector_store_manager_ui()
 
 # Main content area (this is where the sidebar ends and main content begins)
 st.header("🧠 Personal Knowledge Assistant")
